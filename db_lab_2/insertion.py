@@ -12,7 +12,6 @@ DB_CONFIG = {
 }
 
 def generate_data():
-    print("Подключение к БД...")
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
@@ -25,10 +24,10 @@ def generate_data():
     forms = [(1, "очная", "очную"), (2, "заочная", "заочную")]
     execute_values(cur, 'INSERT INTO "Н_ФОРМЫ_ОБУЧЕНИЯ" ("ИД", "ИМЯ_В_ИМИН_ПАДЕЖЕ", "ИМЯ_В_ВИН_ПАДЕЖЕ") VALUES %s', forms)
 
-    print("Генерация планов...")
+    print("Генерация планов")
     plans = []
     for i in range(1, 10001):
-        is_match = i <= 500  # 5%
+        is_match = i <= 500
         date = datetime(2012, 9, 1) if is_match else datetime(2015 + (i % 10), 1, 1)
         course = 1 if is_match else (i % 4) + 1
         fo_id = 1 if is_match else 2
@@ -36,7 +35,7 @@ def generate_data():
         plans.append((i, 1, naps_id, course, fo_id, date))
     execute_values(cur, 'INSERT INTO "Н_ПЛАНЫ" ("ИД", "ТПЛ_ИД", "НАПС_ИД", "КУРС", "ФО_ИД", "ДАТА_УТВЕРЖДЕНИЯ") VALUES %s', plans, page_size=10000)
 
-    print("Генерация групп...")
+    print("Генерация групп")
     groups_plans = []
     for i in range(1, 10000):
         group_name = f"{i:04d}"
@@ -47,11 +46,11 @@ def generate_data():
         groups_plans.append((group_name, plan_id))
     execute_values(cur, 'INSERT INTO "Н_ГРУППЫ_ПЛАНОВ" ("ГРУППА", "ПЛАН_ИД") VALUES %s', groups_plans, page_size=10000)
 
-    print("Генерация людей...")
+    print("Генерация людей")
     people = [(i, f"Фамилия_{i}", f"Имя_{i}", f"Отчество_{i}") for i in range(1, 500001)]
     execute_values(cur, 'INSERT INTO "Н_ЛЮДИ" ("ИД", "ФАМИЛИЯ", "ИМЯ", "ОТЧЕСТВО") VALUES %s', people, page_size=50000)
 
-    print("Генерация учеников...")
+    print("Генерация учеников")
     students = []
     for i in range(1, 500001):
         if i <= 25000:
@@ -70,7 +69,6 @@ def generate_data():
     cur.execute("VACUUM ANALYZE")
     conn.autocommit = False
 
-    # Верификация селективности
     with conn.cursor() as vcur:
         vcur.execute('SELECT COUNT(*) FROM "Н_УЧЕНИКИ"')
         total = vcur.fetchone()[0]
@@ -87,9 +85,6 @@ def generate_data():
               AND нсп."КОД_НАПРСПЕЦ" = '230101'
         """)
         matched = vcur.fetchone()[0]
-        print(f"Верификация: Всего студентов {total}, совпадает с фильтрами {matched} ({matched/total*100:.1f}%)")
-
-    print("Готово: 500 000 сущностей добавлены. Планировщик знает о данных.")
     cur.close()
     conn.close()
 
