@@ -39,6 +39,7 @@ CREATE TABLE Employee_Project_Rights (
     can_assign_tasks BOOLEAN NOT NULL DEFAULT FALSE,
     can_edit_budget BOOLEAN NOT NULL DEFAULT FALSE,
     max_tasks_in_project INTEGER NOT NULL DEFAULT 3 CHECK (max_tasks_in_project >= 0),
+    budget NUMERIC(12, 2) DEFAULT 100.00,
     UNIQUE(employee_id, project_id)
 );
 
